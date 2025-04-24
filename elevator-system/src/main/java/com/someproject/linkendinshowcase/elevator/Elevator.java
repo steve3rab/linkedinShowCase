@@ -1,4 +1,4 @@
-package com.someproject.linkendinshowcase.elevator.core;
+package com.someproject.linkendinshowcase.elevator;
 
 /**
  * This class represents the elevator
