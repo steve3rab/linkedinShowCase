@@ -1,15 +1,14 @@
 package com.someproject.linkendinshowcase.elevator.view;
 
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 import com.someproject.linkendinshowcase.elevator.controller.ElevatorSystemController;
 import com.someproject.linkendinshowcase.elevator.model.ElevatorSystemModel;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.concurrent.Task;
 import javafx.geometry.HPos;
@@ -36,7 +35,6 @@ import javafx.stage.Stage;
 public class ElevatorSystemView extends Application {
 
   private static final String TITLE = "ELEVATOR SYSTEM";
-  private static final FontAwesomeIconView ELEVATOR_ICON = new FontAwesomeIconView(FontAwesomeIcon.CALENDAR, "20");
   private static final double WINDOW_WIDTH = 1000;
   private static final double WINDOW_HEIGHT = 800;
 
@@ -44,22 +42,22 @@ public class ElevatorSystemView extends Application {
 
   private Stage primaryStage;
 
+  private ElevatorSystemModel model;
   private final ElevatorSystemController controller;
-  private final ElevatorSystemModel model;
 
   /**
    * Useful properties
    */
-  private StringProperty infoAreaProp;
-  private StringProperty consoleAreaProp;
+  private StringProperty infoAreaProp = new SimpleStringProperty("");
+  private StringProperty consoleAreaProp = new SimpleStringProperty("");
 
   /**
    * The class constructor
    * 
    */
   public ElevatorSystemView() {
-    this.controller = new ElevatorSystemController();
     this.model = new ElevatorSystemModel();
+    this.controller = new ElevatorSystemController(model);
   }
 
   private VBox createLeftPane() {
@@ -71,12 +69,12 @@ public class ElevatorSystemView extends Application {
     var infoArea = new TextArea();
     infoArea.setEditable(false);
     infoArea.setWrapText(true);
-    infoAreaProp = infoArea.textProperty();
+    infoArea.textProperty().bind(infoAreaProp);;
 
     var consoleArea = new TextArea();
     consoleArea.setEditable(false);
     consoleArea.setWrapText(true);
-    consoleAreaProp = consoleArea.textProperty();
+    consoleArea.textProperty().bind(consoleAreaProp);;
     VBox.setVgrow(consoleArea, Priority.ALWAYS);
 
     leftPane.getChildren().addAll(infoArea, consoleArea);
@@ -107,7 +105,8 @@ public class ElevatorSystemView extends Application {
       activeElevatorTextField.clear();
       activeFloorTextField.clear();
 
-      executeAction(activeElevatorText, activeFloorText);
+      displayInfoAction(activeElevatorText, activeFloorText);
+      displayConsoleAction();
 
       ev.consume();
     });
@@ -117,16 +116,32 @@ public class ElevatorSystemView extends Application {
     return topPane;
   }
 
-  private void executeAction(String activeElevatorText, String activeFloorText) {
+  private void displayInfoAction(String activeElevatorText, String activeFloorText) {
     Task<String> task = new Task<>() {
       @Override
       protected String call() throws Exception {
-        if (null != activeElevatorText) {
-          Arrays.stream(activeElevatorText.split(";")).collect(Collectors.toList());
-        }
-        return "Result from background task!";
+        model.setElevators(activeElevatorText);
+        model.setFloors(activeFloorText);
+        return model.toString();
       }
     };
+
+    task.setOnSucceeded(e -> infoAreaProp.set(task.getValue()));
+    task.setOnFailed(e -> infoAreaProp.set("Error: " + task.getException().getMessage()));
+
+    executorService.submit(task);
+  }
+
+  private void displayConsoleAction() {
+    Task<String> task = new Task<>() {
+      @Override
+      protected String call() throws Exception {
+        return controller.goToNextFloor(20).toString();
+      }
+    };
+
+    task.setOnSucceeded(e -> consoleAreaProp.set(task.getValue()));
+    task.setOnFailed(e -> consoleAreaProp.set("Error: " + task.getException().getMessage()));
 
     executorService.submit(task);
   }
@@ -161,10 +176,10 @@ public class ElevatorSystemView extends Application {
     char c = 'A';
     for (int col = 0; col < max_size; col++) {
       centerPane.add(new Label(String.valueOf(c)), col + 1, max_size);
+      var elevator_icon = new FontAwesomeIconView(FontAwesomeIcon.CALENDAR, "20");
+      centerPane.add(elevator_icon, col + 1, 9);
       c++;
     }
-
-    centerPane.add(ELEVATOR_ICON, 1, 9);
 
     return centerPane;
   }
