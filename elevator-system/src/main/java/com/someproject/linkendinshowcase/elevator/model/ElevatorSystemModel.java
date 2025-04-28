@@ -1,8 +1,8 @@
 package com.someproject.linkendinshowcase.elevator.model;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 import com.someproject.linkendinshowcase.elevator.utils.ElevatorSystemUtils;
 
@@ -12,18 +12,22 @@ import com.someproject.linkendinshowcase.elevator.utils.ElevatorSystemUtils;
 public class ElevatorSystemModel {
 
   private static final String NEWLINE = System.getProperty("line.separator");
-  private List<String> elevators = new ArrayList<>();
-  private List<Integer> floors = new ArrayList<>();
+  private Set<String> elevators = new HashSet<>();
+  private Set<Integer> floors = new HashSet<>();
 
   public void setElevators(String activeElevatorText) {
-    elevators = Arrays.stream(activeElevatorText.split(";")).collect(Collectors.toUnmodifiableList());
+    elevators = Arrays.stream(activeElevatorText.split(";")).collect(Collectors.toUnmodifiableSet());
+  }
+
+  public Set<String> getElevators() {
+    return elevators;
   }
 
   public void setFloors(String activeFloorText) {
-    floors = Arrays.stream(activeFloorText.split(";")).filter(ElevatorSystemUtils::isStrictNumeric).map(Integer::valueOf).collect(Collectors.toUnmodifiableList());
+    floors = Arrays.stream(activeFloorText.split(";")).filter(ElevatorSystemUtils::isStrictNumeric).map(Integer::valueOf).filter(x -> x < 10 & x >= 0).collect(Collectors.toUnmodifiableSet());
   }
 
-  public List<Integer> getFloors() {
+  public Set<Integer> getFloors() {
     return floors;
   }
 

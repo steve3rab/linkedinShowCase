@@ -35,8 +35,8 @@ import javafx.stage.Stage;
 public class ElevatorSystemView extends Application {
 
   private static final String TITLE = "ELEVATOR SYSTEM";
-  private static final double WINDOW_WIDTH = 1000;
-  private static final double WINDOW_HEIGHT = 800;
+  private static final FontAwesomeIcon ELEVATOR_ICON = FontAwesomeIcon.CALENDAR;
+  private static final String ELEVATOR_ICON_SIZE = "20";
 
   private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
@@ -44,6 +44,11 @@ public class ElevatorSystemView extends Application {
 
   private ElevatorSystemModel model;
   private final ElevatorSystemController controller;
+
+  /**
+   * The board layout
+   */
+  private final GridPane centerPane = new GridPane();
 
   /**
    * Useful properties
@@ -136,7 +141,7 @@ public class ElevatorSystemView extends Application {
     Task<String> task = new Task<>() {
       @Override
       protected String call() throws Exception {
-        return controller.goToNextFloor(20).toString();
+        return "";
       }
     };
 
@@ -147,7 +152,6 @@ public class ElevatorSystemView extends Application {
   }
 
   private GridPane createCenterPane() {
-    var centerPane = new GridPane();
     centerPane.setPrefSize(Double.MAX_VALUE, Double.MAX_VALUE);
     centerPane.setHgap(10);
     centerPane.setVgap(10);
@@ -168,6 +172,13 @@ public class ElevatorSystemView extends Application {
       colCst.setHalignment(HPos.CENTER);
       centerPane.getColumnConstraints().add(colCst);
     }
+
+    // last column
+    var colCst = new ColumnConstraints();
+    colCst.setPercentWidth(9.0);
+    colCst.setHalignment(HPos.CENTER);
+    centerPane.getColumnConstraints().add(colCst);
+
     // Row
     for (int row = 0; row < max_size; row++) {
       centerPane.add(new Label(String.valueOf(9 - row)), 0, row);
@@ -176,8 +187,7 @@ public class ElevatorSystemView extends Application {
     char c = 'A';
     for (int col = 0; col < max_size; col++) {
       centerPane.add(new Label(String.valueOf(c)), col + 1, max_size);
-      var elevator_icon = new FontAwesomeIconView(FontAwesomeIcon.CALENDAR, "20");
-      centerPane.add(elevator_icon, col + 1, 9);
+      centerPane.add(new FontAwesomeIconView(ELEVATOR_ICON, ELEVATOR_ICON_SIZE), col + 1, 9);
       c++;
     }
 
@@ -193,7 +203,7 @@ public class ElevatorSystemView extends Application {
     root.setLeft(createLeftPane());
     root.setCenter(createCenterPane());
 
-    var scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
+    var scene = new Scene(root);
     primaryStage.setScene(scene);
     primaryStage.setResizable(false);
 
